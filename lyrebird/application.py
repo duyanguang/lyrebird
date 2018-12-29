@@ -31,6 +31,8 @@ server = {}
 plugins = {}
 
 
+notice = None
+
 def start_server():
     for name in server:
         server[name].start()
@@ -60,4 +62,5 @@ config = ConfigProxy()
 
 
 def root_dir():
-    return _cm.ROOT
+    if _cm:
+        return _cm.ROOT

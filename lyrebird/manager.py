@@ -6,6 +6,7 @@ import socket
 import threading
 import signal
 import os
+from pathlib import Path
 from lyrebird import log
 from lyrebird import application
 from lyrebird.config import Rescource, ConfigManager
@@ -13,6 +14,7 @@ from lyrebird.mock.mock_server import LyrebirdMockServer
 from lyrebird.proxy.proxy_server import LyrebirdProxyServer
 from lyrebird.event import EventServer
 from lyrebird.task import BackgroundTaskServer
+from lyrebird.notice_center import NoticeCenter
 
 
 logger = log.get_logger()
@@ -101,10 +103,16 @@ def main():
 
 
 def run(args:argparse.Namespace):
+    # Check mock data group version. Update if is older than 1.x
+    from . import mock_data_formater
+    data_path = application._cm.config['mock.data']
+    data_dir = Path(data_path)
+    mock_data_formater.check_data_dir(data_dir)
+
     # show current config contents
     config_str = json.dumps(application._cm.config, ensure_ascii=False, indent=4)
     logger.warning(f'Lyrebird start with config:\n{config_str}')
-        
+
     application.server['event'] = EventServer()
     application.server['task'] = BackgroundTaskServer()
     application.server['proxy'] = LyrebirdProxyServer()   
@@ -112,6 +120,9 @@ def run(args:argparse.Namespace):
 
     application.start_server()
 
+    # activate notice center
+    application.notice = NoticeCenter()
+    
     # auto open web browser
     if not args.no_browser:
         webbrowser.open(f'http://localhost:{application.config["mock.port"]}')
